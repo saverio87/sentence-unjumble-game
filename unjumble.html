@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Puzzle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+            width: 80%;
+        }
+
+        .box {
+            margin: 5px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            background-color: #fff;
+            border: 2px solid #aaa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .box.correct {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        .box.wrong {
+            background-color: #f44336;
+            color: #fff;
+        }
+
+        .box.hidden {
+            opacity: 0;
+            transform: scale(0.5);
+            pointer-events: none;
+        }
+
+        .box.appearing {
+            animation: appear 0.5s forwards;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sentence Puzzle Game</h1>
+    <div class="container" id="topContainer"></div>
+    <div class="container" id="bottomContainer"></div>
+
+    <script>
+        const sentence = "Learning to code is a valuable skill that opens many doors in life";
+        const words = sentence.split(" ");
+        const scrambled = words.slice().sort(() => Math.random() - 0.5); // Scramble the words
+
+        let currentIndex = 0; // Track the current word the player needs to choose
+
+        const topContainer = document.getElementById("topContainer");
+        const bottomContainer = document.getElementById("bottomContainer");
+
+        // Helper function to calculate the tallest word's height
+        const getTallestWordHeight = (words) => {
+            const tempDiv = document.createElement("div");
+            tempDiv.style.position = "absolute";
+            tempDiv.style.visibility = "hidden";
+            tempDiv.style.fontSize = "18px";
+            tempDiv.style.fontWeight = "bold";
+            document.body.appendChild(tempDiv);
+
+            let maxHeight = 0;
+            words.forEach((word) => {
+                tempDiv.textContent = word;
+                maxHeight = Math.max(maxHeight, tempDiv.offsetHeight);
+            });
+
+            document.body.removeChild(tempDiv);
+            return maxHeight;
+        };
+
+        const tallestWordHeight = getTallestWordHeight(words);
+
+        // Create top row (empty boxes with same size as the corresponding word)
+        words.forEach((word) => {
+            const box = document.createElement("div");
+            box.classList.add("box");
+            box.style.width = `${word.length * 12 + 20}px`; // Dynamically set width based on word length
+            box.style.height = `${tallestWordHeight + 20}px`; // Set height to match the tallest word
+            topContainer.appendChild(box);
+        });
+
+        // Create bottom row (scrambled words)
+        scrambled.forEach((word) => {
+            const box = document.createElement("div");
+            box.classList.add("box");
+            box.textContent = word;
+            box.style.width = `${word.length * 12 + 20}px`; // Dynamically set width based on word length
+            box.style.height = `${tallestWordHeight + 20}px`; // Set height to match the tallest word
+
+            // Add click event for each box
+            box.addEventListener("click", () => {
+                if (word === words[currentIndex]) {
+                    // Correct word
+                    box.classList.add("hidden"); // Shrink and disappear
+                    const topBox = topContainer.children[currentIndex];
+                    topBox.textContent = word;
+                    topBox.classList.add("appearing", "correct"); // Expand and appear
+                    currentIndex++; // Move to the next word
+                } else {
+                    // Wrong word
+                    box.classList.add("wrong");
+                    setTimeout(() => box.classList.remove("wrong"), 500); // Remove red highlight after 0.5s
+                }
+
+                // Check if the sentence is completed
+                if (currentIndex === words.length) {
+                    setTimeout(() => alert("Congratulations! You completed the sentence!"), 500);
+                }
+            });
+
+            bottomContainer.appendChild(box);
+        });
+    </script>
+</body>
+
+</html>

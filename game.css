@@ -1,0 +1,243 @@
+body {
+    background-color: #f4c531;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 1000;
+}
+
+#overlay-content {
+    max-width: 80%;
+}
+
+#overlay.hidden {
+    display: none;
+}
+
+#gameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 80%;
+}
+
+#endScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    /* Align content to the top for scrolling */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f4c622;
+    /* Semi-transparent background */
+    color: black;
+    font-family: Arial, sans-serif;
+    font-size: 1.5rem;
+    z-index: 10;
+    overflow-y: auto;
+    /* Add vertical scrolling if content overflows */
+    padding: 20px;
+    /* Add some padding for aesthetics */
+    box-sizing: border-box;
+    /* Ensure padding doesn't affect dimensions */
+}
+
+#endScreen.hidden {
+    display: none;
+}
+
+#gameContainer.hidden {
+    display: none;
+}
+
+.not-clickable {
+    pointer-events: none;
+}
+
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 1rem;
+}
+
+#topRow {
+    padding: 1rem;
+    border: 2px solid grey;
+    border-radius: 0.5rem;
+}
+
+/* Box (tiles) and its variations */
+
+.box {
+    position: relative;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* width: 5rem; */
+    height: 3rem;
+    /* margin: 5px; */
+    /* transition: opacity 0.3s ease, transform 0.3s ease; */
+}
+
+.box.normal {
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    border: 2px solid #000000;
+    border-radius: 0.5rem;
+}
+
+.box.underscored {
+    position: relative;
+    /* width: 5rem; */
+    /* height: 5rem; */
+    border-bottom: 5px solid darkgray;
+    color: black;
+}
+
+.box.correct {
+    background-color: #4caf50;
+    color: #fff;
+}
+
+.box.wrong {
+    background-color: #f44336;
+    color: #fff;
+}
+
+.box.hidden {
+    opacity: 0;
+    transform: scale(0.2);
+    pointer-events: none;
+    transition: all 0.5s ease-in-out;
+    -webkit-transition: all 0.5s ease-in-out;
+    -moz-transition: all 0.5s ease-in-out;
+}
+
+
+.box.appearing {
+    animation: appear 0.5s ease;
+}
+
+.box img {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    transition: all 0.5s ease;
+    z-index: 99;
+}
+
+img.animate {
+    animation: growShrink 1s ease
+        /* goUp 1s ease; */
+}
+
+
+/* Navigation arrows at the bottom */
+
+.navigation {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3rem;
+}
+
+.solid-icon {
+    font-family: 'Font Awesome 5 Free';
+    /* Make sure it's the correct font-family */
+    /* Solid icon weight */
+    transition: all 0.3s ease;
+}
+
+/* Show the regular icon on hover */
+.solid-icon:hover {
+    /* Regular icon weight */
+    color: darkgoldenrod;
+}
+
+.arrow {
+    margin: 0 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.arrow.disabled {
+    color: #ccc;
+    pointer-events: none;
+}
+
+.word-indicator {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes growShrink {
+    0% {
+        width: 5rem;
+        height: 5rem;
+        opacity: 0;
+        transform: scale(1.0);
+    }
+
+    50% {
+        position: absolute;
+        width: 5rem;
+        height: 5rem;
+        opacity: 1;
+        transform: scale(0.8);
+        transform: translateY(-30px);
+    }
+
+    100% {
+        width: 5rem;
+        height: 5rem;
+        opacity: 0.2;
+        transform: scale(1.5);
+        transform: translateY(-50px);
+
+    }
+
+}

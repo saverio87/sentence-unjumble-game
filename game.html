@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Unscramble</title>
+    <link rel="stylesheet" href="game.css">
+</head>
+
+<body>
+    <!-- <div id="overlay">
+        <div id="overlay-content">
+            <p>Please switch to fullscreen mode for the best experience.</p>
+            <button id="fullscreen-btn">Enter Fullscreen</button>
+        </div>
+    </div> -->
+    <div id="gameContainer">
+        <div class="row" id="topRow"></div>
+        <div class="row" id="bottomRow"></div>
+        <div class="navigation">
+            <span class="arrow" id="prevArrow">
+                <i class="fa-solid fa-angle-left solid-icon"></i>
+            </span>
+            <span class="word-indicator" id="sentenceIndicator">1 of 10</span>
+            <span class="arrow" id="nextArrow">
+                <i class="fa-solid fa-angle-right solid-icon"></i>
+            </span>
+        </div>
+    </div>
+
+    <div id="endScreen" class="hidden">
+        <h1>Congratulations!</h1>
+        <p>You unscrambled all the words:</p>
+
+    </div>
+
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>
