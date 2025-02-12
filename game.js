@@ -1,4 +1,5 @@
 import { animateSentenceCompletion, disappearBox, appearBox, animateWrongWord } from "./animations.js";
+import { requestFullScreen, checkFullscreen } from "./utils.js";
 
 // Game state
 
@@ -212,13 +213,7 @@ class GameObserver {
                 break;
 
             case "enterFullScreen":
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
-                    document.documentElement.webkitRequestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
-                    document.documentElement.msRequestFullscreen();
-                }
+                requestFullScreen();
                 break;
 
             case "wrongLetter":
@@ -346,6 +341,18 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(sentences)
     gameState.generateSentenceObjects(sentences);
     gameState.notifyObservers("stateChanged", { currentSentenceIndex: gameState.state.currentSentenceIndex });
+
+    // FULL SCREEN prompt
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    fullscreenBtn.addEventListener('click', () => {
+        gameState.notifyObservers("enterFullScreen", null);
+    })
+    document.addEventListener('fullscreenchange', () => {
+        checkFullscreen()
+    });
+    window.addEventListener('resize', () => {
+        checkFullscreen()
+    });
 
     // ARROW NAVIGATION - Event listeners
     const prevArrow = document.getElementById("prevArrow");
