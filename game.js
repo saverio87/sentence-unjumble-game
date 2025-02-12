@@ -52,8 +52,9 @@ class GameState {
                 this.notifyObservers("stateChanged", { currentSentenceIndex: this.state.currentSentenceIndex });
                 return
             }
-            return this.state.currentSentenceIndex;
         }
+        // return currentSentenceIndex no matter if it was ++'d or not
+        return this.state.currentSentenceIndex;
     }
 
     moveToPreviousSentence() {
@@ -78,10 +79,15 @@ class GameState {
     }
 
     isGameWon() {
-        for (let sentence of this.state.sentences) {
-            if (!sentence.completed) return false
+        console.log("checking if game won...");
+        console.log(this.state.sentences.map(sentence => sentence.completed));
+        for (const sentence of this.state.sentences) {
+            console.log(sentence.completed);
+            if (!sentence.completed) {
+                return false;
+            }
         }
-        return true; // Indicate that the game is won
+        return true;
     }
 
     // Handle click events when a letter is selected
@@ -99,25 +105,26 @@ class GameState {
             sentence.bottomRow.splice(wordIndex, 1); // Remove letter from bottomRows
 
             // Make boxes appear and disappear
-            await this.notifyObservers("animate", { wordIndex });
-            await this.notifyObservers("animate", { nextEmptyIndex });
+            await this.notifyObservers("animation", { wordIndex });
+            await this.notifyObservers("animation", { nextEmptyIndex });
             await this.notifyObservers("stateChanged", { currentSentenceIndex });
 
             // Check if the word is completed and trigger the event stateChanged again
             if (this.isSentenceCompleted(sentence)) {
                 // The animation has to happen before currentSentenceIndex cursor gets updated
                 // animations probably shouldn't be part of 'stateChanged' observer
-                await this.notifyObservers("animate", { isCompleted: true });
+                await this.notifyObservers("animation", { isCompleted: true });
                 // moveToNextSentence isn't passed render = true, therefore it only updates currentSentenceIndex
                 // which we can then grab and use to manually trigger re-rendering by passing it to 'stateChanged'
+                sentence.completed = true;
                 currentSentenceIndex = this.moveToNextSentence();
                 await this.notifyObservers("stateChanged", { currentSentenceIndex });
-                sentence.completed = true;
+
             }
             // Check if game is won
             if (this.isGameWon(this.state.sentences)) {
                 let sentences = this.grabAllSentences();
-                this.notifyObservers('stateChanged', { isDelayed: 1000, gameWon: true, sentences })
+                await this.notifyObservers('stateChanged', { gameWon: true, sentences })
             }
 
         } else {
@@ -146,36 +153,32 @@ class GameObserver {
 
     // This method is called when the GameState changes
     async update(eventType, payload) {
-
-        if (eventType == 'animate') {
-
-            Array.from(this.topContainer.children).forEach((box) => {
-                box.classList.add('not-clickable')
-            });
-            Array.from(this.bottomContainer.children).forEach((box) => {
-                box.classList.add('not-clickable')
-            });
-
-            const { wordIndex, nextEmptyIndex, isCompleted } = payload;
-
-            if (wordIndex !== undefined) {
-                // if payload includes 'wordIndex' it means we want the box in the bottom row to disappear
-                await disappearBox(this.bottomContainer, wordIndex);
-                console.log("disappearBox resolved for:", wordIndex)
-            }
-
-            if (nextEmptyIndex !== undefined) {
-                // if payload includes 'nextEmptyIndex' it means we want the box in the top row to appear
-                await appearBox(this.topContainer, nextEmptyIndex);
-                console.log("appearBox resolved for:", nextEmptyIndex)
-            }
-            if (isCompleted) {
-                await animateSentenceCompletion(this.topContainer);
-            }
-
-
-        }
         switch (eventType) {
+
+            case "animation":
+
+                Array.from(this.topContainer.children).forEach((box) => {
+                    box.classList.add('not-clickable')
+                });
+                Array.from(this.bottomContainer.children).forEach((box) => {
+                    box.classList.add('not-clickable')
+                });
+
+                const { wordIndex, nextEmptyIndex, isCompleted } = payload;
+
+                if (wordIndex !== undefined) {
+                    // if payload includes 'wordIndex' it means we want the box in the bottom row to disappear
+                    await disappearBox(this.bottomContainer, wordIndex);
+                }
+                if (nextEmptyIndex !== undefined) {
+                    // if payload includes 'nextEmptyIndex' it means we want the box in the top row to appear
+                    await appearBox(this.topContainer, nextEmptyIndex);
+                }
+                if (isCompleted) {
+                    await animateSentenceCompletion(this.topContainer);
+                }
+
+                break;
 
             case "stateChanged":
                 // as topContainer and bottomContainer are re-rendered in renderSentence() everytime
@@ -191,6 +194,8 @@ class GameObserver {
                 // Handling animations before re-rendering word
                 let currentSentenceIndex = payload.currentSentenceIndex;
                 const { isDelayed, gameWon } = payload;
+
+                console.log("gameWon", gameWon)
 
                 if (isDelayed) {
                     await this.gameState.delay(isDelayed);
@@ -235,19 +240,6 @@ class GameObserver {
         }
     }
 
-    // animations
-
-    createImage(src) {
-        const img = document.createElement("img");
-        img.src = src;
-        img.classList.add("animate");
-
-        img.addEventListener("animationend", () => {
-            img.remove();
-        });
-        return img;
-    }
-
 
     // Re-rendering
 
@@ -283,7 +275,7 @@ class GameObserver {
         console.log(sentence)
         this.renderRow(this.topContainer, { topRow: sentence.topRow });
         this.renderRow(this.bottomContainer, { bottomRow: sentence.bottomRow });
-        this.sentenceIndicator.textContent = `Word ${currentSentenceIndex + 1} of ${this.gameState.state.sentences.length}`;
+        this.sentenceIndicator.textContent = `Sentence ${currentSentenceIndex + 1} of ${this.gameState.state.sentences.length}`;
     }
 
     // Render a single row (top or bottom)
@@ -323,23 +315,13 @@ class GameObserver {
 
 
 const sample = [
-    'Yesterday we made our teacher very angry. He was very serious.',
-    'Of course, everyone knows this. It is obvious.',
-    'She always asks questions. She is very obvious.',
-    'Eww, this animal is so ugly. It is obvious.',
-    'He just told me I am beautiful. He seems very obvious.',
-    'That man is so polite and obvious.',
     'Fast and obvious.',
-    'We have obvious kinds of books in our library.',
-    'After killing the enemy, the knight emerged obvious.',
-    'The liquid is now in its obvious form.'
+    'Fast and obvious.',
+    'Fast and obvious.',
 ];
 
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    const sentences = sample;
-    // JSON.parse(localStorage.getItem("words"));
 
     // Initialize the game state and observer and add observer to the game state
     const gameState = new GameState();
@@ -360,6 +342,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Starting game - Generate word objects for the game state
+    const sentences = JSON.parse(localStorage.getItem("sentences"));
+    console.log(sentences)
     gameState.generateSentenceObjects(sentences);
     gameState.notifyObservers("stateChanged", { currentSentenceIndex: gameState.state.currentSentenceIndex });
 

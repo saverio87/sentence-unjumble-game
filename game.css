@@ -86,7 +86,7 @@ body {
 }
 
 #topRow {
-    padding: 1rem;
+    padding: 1rem 2rem;
     border: 2px solid grey;
     border-radius: 0.5rem;
 }
@@ -116,10 +116,8 @@ body {
 }
 
 .box.underscored {
-    position: relative;
-    /* width: 5rem; */
-    /* height: 5rem; */
-    border-bottom: 5px solid darkgray;
+    border-right: 2px solid transparent;
+    border-bottom: 2px solid darkgray;
     color: black;
 }
 

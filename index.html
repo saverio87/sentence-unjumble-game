@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Unjumble</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Left Section -->
+        <div class="left-section">
+            <h1>Enter up to 10 sentences</h1>
+            <div class="form-container">
+
+            </div>
+            <div class="submit-button">
+                <button id="submitWords" type="button" onclick="submitSentences()">Submit</button>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="right-section">
+            <h1>Don't know how to use this game template?</h1>
+            <p>Play around with some of our pre-made games!</p>
+            <div class="pre-made-buttons">
+                <button type="button" onclick="submitSampleSentences('negatives')">
+                    Sentences with negatives (#1)
+                </button>
+                <button type="button" onclick="submitSampleSentences('ation')">
+                    Sentences with -ation words (#2)
+                </button>
+                <button type="button" onclick="submitSampleSentences('adverbs')">
+                    Sentences with adverbs (#3)
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
