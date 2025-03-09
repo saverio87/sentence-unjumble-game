@@ -132,12 +132,9 @@ body {
 }
 
 .box.hidden {
+    border: 2px solid transparent;
     opacity: 0;
-    transform: scale(0.2);
     pointer-events: none;
-    transition: all 0.5s ease-in-out;
-    -webkit-transition: all 0.5s ease-in-out;
-    -moz-transition: all 0.5s ease-in-out;
 }
 
 
@@ -145,18 +142,12 @@ body {
     animation: appear 0.5s ease;
 }
 
-.box img {
+.img {
     position: absolute;
-    width: 0;
-    height: 0;
-    opacity: 0;
-    transition: all 0.5s ease;
+    width: 80%;
+    aspect-ratio: 1;
+    opacity: 1;
     z-index: 99;
-}
-
-img.animate {
-    animation: growShrink 1s ease
-        /* goUp 1s ease; */
 }
 
 
@@ -212,30 +203,17 @@ img.animate {
     }
 }
 
-@keyframes growShrink {
-    0% {
-        width: 5rem;
-        height: 5rem;
-        opacity: 0;
-        transform: scale(1.0);
-    }
 
-    50% {
-        position: absolute;
-        width: 5rem;
-        height: 5rem;
-        opacity: 1;
-        transform: scale(0.8);
-        transform: translateY(-30px);
-    }
+/* Animate CSS animations */
 
-    100% {
-        width: 5rem;
-        height: 5rem;
-        opacity: 0.2;
-        transform: scale(1.5);
-        transform: translateY(-50px);
+.animate__animated.animate__slideOutUp {
+    --animate-duration: 0.5s;
+}
 
-    }
+.animate__animated.animate__zoomIn {
+    --animate-duration: 0.5s;
+}
 
+.animate__animated.animate__zoomOut {
+    --animate-duration: 0.5s;
 }

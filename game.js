@@ -1,5 +1,6 @@
-import { animateSentenceCompletion, disappearBox, appearBox, animateWrongWord } from "./animations.js";
-import { requestFullScreen, checkFullscreen } from "./utils.js";
+import { checkFullscreen } from "./utils.js";
+import { GameObserver } from "./gameObserver.js";
+import { SoundManager, SoundObserver } from "./sound/sound.js";
 
 // Game state
 
@@ -7,18 +8,39 @@ class GameState {
     constructor() {
         this.state = { sentences: [], currentSentenceIndex: 0 };
         this.observers = [];
+        this.listeners = [];
     }
 
-    // Add observer to the list
+    // Add observer and listener to the list
     addObserver(observer) {
         this.observers.push(observer);
+    }
+    addListener(listener) {
+        this.listeners.push(listener);
     }
 
     async notifyObservers(eventType, payload) {
         // Notify all observers about the event and collect their Promises
         const promises = this.observers.map(observer => observer.update(eventType, payload));
-        // Wait for all Promises to resolve
-        await Promise.all(promises);
+        try {
+            await Promise.all(promises);
+            console.log(`✅ All observers resolved for event: ${eventType}`);
+        } catch (error) {
+            console.error(`❌ Observer error for event: ${eventType}`, error);
+        }
+    }
+
+    async notifyListeners(eventType) {
+        console.log('notifyListeners activated')
+        // Notify all observers about the event and collect their Promises
+        const promises = this.listeners.map(listener => listener.update(eventType));
+        try {
+            await Promise.all(promises);
+            console.log(`✅ All listeners resolved for event: ${eventType}`);
+        } catch (error) {
+            console.error(`❌ Listener error for event: ${eventType}`, error);
+        }
+
     }
 
     // Generate word objects for the game state
@@ -66,12 +88,6 @@ class GameState {
         }
     }
 
-    // Utility function to introduce a delay (pause)
-
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     // Click events
 
     // Check condition, return true or false
@@ -103,13 +119,17 @@ class GameState {
             sentence.currentWordIndex += 1;
             console.log(sentence.currentWordIndex)
             sentence.topRow[nextEmptyIndex] = wordClicked; // Place letter in topRow
-            sentence.bottomRow.splice(wordIndex, 1); // Remove letter from bottomRows
+            // replace all letters in string with underscores
+            sentence.bottomRow[wordIndex] = sentence.bottomRow[wordIndex].replace(/[a-zA-Z]/g, "_");
+            // sentence.bottomRow.splice(wordIndex, 1); // Remove letter from bottomRows
 
             // Make boxes appear and disappear
-            await this.notifyObservers("animation", { wordIndex });
-            await this.notifyObservers("animation", { nextEmptyIndex });
-            await this.notifyObservers("stateChanged", { currentSentenceIndex });
-
+            await this.notifyObservers("animation", {
+                wordIndex,
+                nextEmptyIndex
+            });
+            // await this.notifyObservers("stateChanged", { currentSentenceIndex });
+            await this.notifyObservers("triggerRendering", { currentSentenceIndex })
             // Check if the word is completed and trigger the event stateChanged again
             if (this.isSentenceCompleted(sentence)) {
                 // The animation has to happen before currentSentenceIndex cursor gets updated
@@ -137,174 +157,7 @@ class GameState {
 }
 
 
-// Game Observer
 
-
-class GameObserver {
-    constructor(gameState) {
-        this.gameState = gameState;
-        this.gameContainer = document.getElementById("gameContainer");
-        this.endScreen = document.getElementById("endScreen");
-        // Rows containers
-        this.topContainer = document.getElementById("topRow");
-        this.bottomContainer = document.getElementById("bottomRow");
-        this.sentenceIndicator = document.getElementById("sentenceIndicator");
-    }
-
-
-    // This method is called when the GameState changes
-    async update(eventType, payload) {
-        switch (eventType) {
-
-            case "animation":
-
-                Array.from(this.topContainer.children).forEach((box) => {
-                    box.classList.add('not-clickable')
-                });
-                Array.from(this.bottomContainer.children).forEach((box) => {
-                    box.classList.add('not-clickable')
-                });
-
-                const { wordIndex, nextEmptyIndex, isCompleted } = payload;
-
-                if (wordIndex !== undefined) {
-                    // if payload includes 'wordIndex' it means we want the box in the bottom row to disappear
-                    await disappearBox(this.bottomContainer, wordIndex);
-                }
-                if (nextEmptyIndex !== undefined) {
-                    // if payload includes 'nextEmptyIndex' it means we want the box in the top row to appear
-                    await appearBox(this.topContainer, nextEmptyIndex);
-                }
-                if (isCompleted) {
-                    await animateSentenceCompletion(this.topContainer);
-                }
-
-                break;
-
-            case "stateChanged":
-                // as topContainer and bottomContainer are re-rendered in renderSentence() everytime
-                // this event is observed, there is no need to remove the class .not-clickable
-                // at a later time
-                Array.from(this.topContainer.children).forEach((box) => {
-                    box.classList.add('not-clickable')
-                });
-                Array.from(this.bottomContainer.children).forEach((box) => {
-                    box.classList.add('not-clickable')
-                });
-
-                // Handling animations before re-rendering word
-                let currentSentenceIndex = payload.currentSentenceIndex;
-                const { isDelayed, gameWon } = payload;
-
-                console.log("gameWon", gameWon)
-
-                if (isDelayed) {
-                    await this.gameState.delay(isDelayed);
-                }
-
-                if (gameWon) {
-                    this.toggleScreens(payload.sentences);
-                    return
-                };
-                // Re-render word
-                this.renderSentence(currentSentenceIndex);
-                console.log("Called renderSentence");
-
-                break;
-
-            case "enterFullScreen":
-                requestFullScreen();
-                break;
-
-            case "wrongLetter":
-                animateWrongWord(this.bottomContainer, payload.wordIndex);
-                break;
-        }
-
-        return
-    }
-
-
-
-    checkFullscreen() {
-        const overlay = document.getElementById('overlay');
-        if (document.fullscreenElement) {
-            overlay.classList.add('hidden');
-        } else {
-            overlay.classList.remove('hidden');
-        }
-    }
-
-
-    // Re-rendering
-
-    toggleScreens(words) {
-        this.gameContainer.classList.add("hidden");
-        this.endScreen.classList.remove("hidden");
-        this.renderEndScreen(words);
-    }
-
-    renderEndScreen(sentences) {
-        sentences.forEach((sentence, sentenceIndex) => {
-            // Create a row for the sentence
-            const row = document.createElement("div");
-            row.classList.add("row");
-            row.id = `topRow`; // Assign a unique ID for each row
-
-            // Populate the row with letters
-            sentence.split(" ").forEach(letter => {
-                const box = document.createElement("div");
-                box.classList.add("box", "normal", "correct"); // Add classes
-                box.textContent = letter; // Set the letter
-                row.appendChild(box); // Add the box to the row
-            });
-
-            // Append the row to the container
-            this.endScreen.appendChild(row);
-        });
-    }
-
-    // Render both the top and bottom rows
-    renderSentence(currentSentenceIndex) {
-        const sentence = this.gameState.state.sentences[currentSentenceIndex];
-        console.log(sentence)
-        this.renderRow(this.topContainer, { topRow: sentence.topRow });
-        this.renderRow(this.bottomContainer, { bottomRow: sentence.bottomRow });
-        this.sentenceIndicator.textContent = `Sentence ${currentSentenceIndex + 1} of ${this.gameState.state.sentences.length}`;
-    }
-
-    // Render a single row (top or bottom)
-    renderRow(container, rowData) {
-        container.innerHTML = ""; // Clear current content
-        const currentSentence = this.gameState.state.sentences[this.gameState.state.currentSentenceIndex].sentence;
-        // Top row
-        if (rowData.topRow) {
-            rowData.topRow.forEach((word, index) => {
-                const box = document.createElement("div");
-
-                word == "" ?
-                    box.classList.add('box', 'underscored') :
-                    box.classList.add('box', 'normal', 'correct')
-                box.textContent = word;
-                console.log(currentSentence.split(" ")[index])
-                box.style.width = `${(currentSentence.split(" ")[index].length) + 2}rem`; // Dynamically set width based on word length
-                container.appendChild(box);
-            });
-        };
-        // Bottom row
-        if (rowData.bottomRow) {
-            rowData.bottomRow.forEach(word => {
-                const box = document.createElement("div");
-                box.classList.add("box", "normal");
-                box.style.width = `${(word.length) + 2}rem`; // Dynamically set width based on word length
-                box.textContent = word;
-                container.appendChild(box);
-            });
-        }
-    }
-
-
-}
 
 // ---------------------------------------
 
@@ -321,26 +174,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize the game state and observer and add observer to the game state
     const gameState = new GameState();
     const gameObserver = new GameObserver(gameState);
+    // Init sound
+    const soundManager = new SoundManager();
+    const soundObserver = new SoundObserver(soundManager);
+    // add observer and listener
     gameState.addObserver(gameObserver);
-
-    // Full screen
-    // const fullscreenBtn = document.getElementById('fullscreen-btn');
-    // fullscreenBtn.addEventListener('click', () => {
-    //     gameState.notifyObservers("enterFullScreen", null);
-    // })
-    // document.addEventListener('fullscreenchange', () => {
-    //     gameObserver.checkFullscreen()
-    // });
-    // window.addEventListener('resize', () => {
-    //     gameObserver.checkFullscreen()
-    // });
-
-
+    gameState.addListener(soundObserver);
     // Starting game - Generate word objects for the game state
     const sentences = JSON.parse(localStorage.getItem("sentences"));
     console.log(sentences)
     gameState.generateSentenceObjects(sentences);
-    gameState.notifyObservers("stateChanged", { currentSentenceIndex: gameState.state.currentSentenceIndex });
+    gameState.notifyObservers("triggerRendering", { currentSentenceIndex: gameState.state.currentSentenceIndex });
 
     // FULL SCREEN prompt
     const fullscreenBtn = document.getElementById('fullscreen-btn');
