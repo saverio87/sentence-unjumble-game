@@ -119,8 +119,10 @@ class GameState {
             sentence.currentWordIndex += 1;
             console.log(sentence.currentWordIndex)
             sentence.topRow[nextEmptyIndex] = wordClicked; // Place letter in topRow
-            // replace all letters in string with underscores
-            sentence.bottomRow[wordIndex] = sentence.bottomRow[wordIndex].replace(/[a-zA-Z]/g, "_");
+            // replace all letters in string with ^ - this is for the purpose of conditional
+            // rendering - if word contains ... , then we will render it as a hidden box
+            sentence.bottomRow[wordIndex] = sentence.bottomRow[wordIndex].replace(/./g, "^");
+            // sentence.bottomRow[wordIndex].replace(/[a-zA-Z]/g, "^");
             // sentence.bottomRow.splice(wordIndex, 1); // Remove letter from bottomRows
 
             // Make boxes appear and disappear

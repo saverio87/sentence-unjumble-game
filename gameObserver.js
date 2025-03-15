@@ -100,6 +100,10 @@ export class GameObserver {
         return
     }
 
+    // if word is made up only by one character, returns true
+    isMadeOfOnlyChar(word, char) {
+        return word.replaceAll(char, "").trim() === "";
+    }
 
 
     checkFullscreen() {
@@ -172,7 +176,7 @@ export class GameObserver {
             rowData.bottomRow.forEach(word => {
                 const box = document.createElement("div");
                 // conditional rendering 
-                if (word.includes("__")) {
+                if (this.isMadeOfOnlyChar(word, "^")) {
                     box.classList.add("box", "hidden");
                 } else {
                     box.classList.add("box", "normal");

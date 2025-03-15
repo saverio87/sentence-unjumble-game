@@ -144,7 +144,7 @@ body {
 
 .img {
     position: absolute;
-    width: 80%;
+    width: 5rem;
     aspect-ratio: 1;
     opacity: 1;
     z-index: 99;
